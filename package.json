@@ -1,0 +1,26 @@
+{
+  "name": "poe-timer",
+  "version": "1.0.0",
+  "description": "Run timer and analyser for Path of Exile",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./src-back/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nick-ng/poe-timer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nick-ng/poe-timer/issues"
+  },
+  "homepage": "https://github.com/nick-ng/poe-timer#readme",
+  "dependencies": {
+    "dayjs": "^1.11.2",
+    "node-fetch": "^3.2.4",
+    "yaml": "^2.1.0"
+  }
+}
