@@ -85,7 +85,11 @@ app.get("/info", (_req, res, _next) => {
   const fractionInMaps = poeLocationState.msInMaps / poeLocationState.msTotal;
   const percentInMaps = fractionInMaps * 100;
   const percentInTown = (1 - fractionInMaps) * 100;
-  res.json({ percentInMaps, percentInTown, xphr });
+  const currentXp =
+    experienceLog.length > 0
+      ? experienceLog[experienceLog.length - 1].experience
+      : 0;
+  res.json({ percentInMaps, percentInTown, xphr, currentXp });
 });
 
 app.post("/reset", (_req, res, _next) => {

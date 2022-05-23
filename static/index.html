@@ -11,16 +11,27 @@
 
   .main-display {
     font-size: 32pt;
-    border-collapse: collapse
+    border-collapse: collapse;
   }
 
   .main-display td {
+    padding: 10px;
+  }
+
+  .second-display {
+    border-collapse: collapse;
+  }
+
+  .second-display td {
     padding: 5px;
   }
 
   #in-maps,
   #in-town,
-  #xphr {
+  #xphr,
+  #time-to-next,
+  #time-to-hundred,
+  #current-xp {
     text-align: right;
   }
 </style>
@@ -44,15 +55,51 @@
   </table>
   <button id="debug-button">Debug</button>
   <button id="reset-button">Reset</button>
+  <table class="second-display">
+    <tbody>
+      <tr>
+        <td>Hours to level <span id="next-level"></span></td>
+        <td id="time-to-next"></td>
+      </tr>
+      <tr>
+        <td>Hours to level 100</td>
+        <td id="time-to-hundred"></td>
+      </tr>
+      <tr>
+        <td>Current XP</td>
+        <td id="current-xp"></td>
+      </tr>
+    </tbody>
+  </table>
+  <button id="copy-current-xp">Copy Current XP</button>
 </body>
 
 <script>
   (() => {
+    const levels = [
+      { level: 90, totalXp: 1934009687 },
+      { level: 91, totalXp: 2094900291 },
+      { level: 92, totalXp: 2268549086 },
+      { level: 93, totalXp: 2455921256 },
+      { level: 94, totalXp: 2658074992 },
+      { level: 95, totalXp: 2876116901 },
+      { level: 96, totalXp: 3111280300 },
+      { level: 97, totalXp: 3364828162 },
+      { level: 98, totalXp: 3638186694 },
+      { level: 99, totalXp: 3932818530 },
+      { level: 100, totalXp: 4250334444 },
+    ]
+
     const resetButtonEl = document.getElementById('reset-button')
     const debugButtonEl = document.getElementById('debug-button')
     const inMapsEl = document.getElementById('in-maps')
     const inTownEl = document.getElementById('in-town')
     const xphrEl = document.getElementById('xphr')
+    const nextLevelEl = document.getElementById('next-level')
+    const timeToNextEl = document.getElementById('time-to-next')
+    const timeToHundredEl = document.getElementById('time-to-hundred')
+    const currentXpEl = document.getElementById('current-xp')
+    const copyCurrentXpEl = document.getElementById('copy-current-xp')
 
     resetButtonEl.addEventListener('click', () => {
       fetch('/reset', {
@@ -66,14 +113,33 @@
       })
     })
 
+    let currentXp = 0
+
+    copyCurrentXpEl.addEventListener('click', () => {
+      navigator.clipboard.writeText(currentXp)
+    })
+
     setInterval(async () => {
       try {
         const res = await fetch("/info")
         const resJson = await res.json();
 
+        const { currentXp: currentXpa, xphr } = resJson
+        currentXp = currentXpa;
+
         inMapsEl.textContent = Math.round(resJson.percentInMaps)
         inTownEl.textContent = Math.round(resJson.percentInTown)
-        xphrEl.textContent = Math.round(resJson.xphr)?.toLocaleString('en')
+        xphrEl.textContent = Math.round(xphr)?.toLocaleString('en')
+        currentXpEl.textContent = currentXp.toLocaleString('en')
+
+        const currentLevel = levels.sort((a, b) => b.level - a.level).find(a => a.totalXp < currentXp)
+
+        nextLevelEl.textContent = currentLevel.level
+        const remainingXp = currentLevel.totalXp - currentXp
+        timeToNextEl.textContent = (remainingXp / xphr).toFixed(2)
+
+        const remainingXp100 = levels[levels.length - 1].totalXp - currentXp
+        timeToHundredEl.textContent = (remainingXp100 / xphr).toFixed(2)
       } catch (e) {
         console.error(e)
       }
