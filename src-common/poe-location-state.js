@@ -22,10 +22,12 @@ export default class PoeLocationState {
   }
 
   get inMapPercent() {
-    return `in maps: ${this.msInMaps / 1000}, total: ${this.msTotal / 1000} (${(
-      (this.msInMaps / this.msTotal) *
-      100
-    ).toFixed(1)}%)`;
+    const fractionInMaps = poeLocationState.msInMaps / poeLocationState.msTotal;
+    const percentInMaps = fractionInMaps * 100;
+    const percentInTown = (1 - fractionInMaps) * 100;
+    return `in maps: ${Math.round(percentInMaps)}%, in town ${Math.round(
+      percentInTown
+    )}%`;
   }
 
   addLine = (line) => {
