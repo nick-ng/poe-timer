@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+<style>
+  body {
+    background-color: black;
+    color: white;
+    padding: 5px;
+    font-family: sans-serif;
+  }
+
+  .main-display {
+    font-size: 32pt;
+    border-collapse: collapse
+  }
+
+  .main-display td {
+    padding: 5px;
+  }
+
+  #in-maps,
+  #in-town,
+  #xphr {
+    text-align: right;
+  }
+</style>
+
+<body>
+  <table class="main-display">
+    <tbody>
+      <tr>
+        <td>In Maps (%)</td>
+        <td id="in-maps"></td>
+      </tr>
+      <tr>
+        <td>In Hideout (%)</td>
+        <td id="in-town"></td>
+      </tr>
+      <tr>
+        <td>XP/hr</td>
+        <td id="xphr"></td>
+      </tr>
+    </tbody>
+  </table>
+  <button id="debug-button">Debug</button>
+  <button id="reset-button">Reset</button>
+</body>
+
+<script>
+  (() => {
+    const resetButtonEl = document.getElementById('reset-button')
+    const debugButtonEl = document.getElementById('debug-button')
+    const inMapsEl = document.getElementById('in-maps')
+    const inTownEl = document.getElementById('in-town')
+    const xphrEl = document.getElementById('xphr')
+
+    resetButtonEl.addEventListener('click', () => {
+      fetch('/reset', {
+        method: "POST"
+      })
+    })
+
+    debugButtonEl.addEventListener('click', () => {
+      fetch('/debug', {
+        method: "GET"
+      })
+    })
+
+    setInterval(async () => {
+      try {
+        const res = await fetch("/info")
+        const resJson = await res.json();
+
+        inMapsEl.textContent = Math.round(resJson.percentInMaps)
+        inTownEl.textContent = Math.round(resJson.percentInTown)
+        xphrEl.textContent = Math.round(resJson.xphr)?.toLocaleString('en')
+      } catch (e) {
+        console.error(e)
+      }
+
+    }, 2000)
+  })()
+</script>
+
+</html>

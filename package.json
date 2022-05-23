@@ -5,7 +5,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node ./src-back/server.js"
+    "start": "nodemon --ignore static/ --ignore src-front/ --ignore data/ --delay 2 ./src-back/server.js",
+    "serve": "node ./src-back/server.js"
   },
   "repository": {
     "type": "git",
@@ -20,7 +21,9 @@
   "homepage": "https://github.com/nick-ng/poe-timer#readme",
   "dependencies": {
     "dayjs": "^1.11.2",
+    "express": "^4.18.1",
     "node-fetch": "^3.2.4",
+    "nodemon": "^2.0.16",
     "yaml": "^2.1.0"
   }
 }
