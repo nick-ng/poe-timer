@@ -8,7 +8,7 @@ import PoeLocationState from "../src-common/poe-location-state.js";
 import { sleep } from "./utils.js";
 import { isTown } from "../src-common/poe-locations.js";
 
-const PORT = 8080;
+const PORT = 21842;
 const app = express();
 const server = createServer(app);
 

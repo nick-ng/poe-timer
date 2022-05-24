@@ -36,6 +36,10 @@
   }
 </style>
 
+<head>
+  <title>PoE Timer</title>
+</head>
+
 <body>
   <table class="main-display">
     <tbody>
@@ -132,13 +136,13 @@
         xphrEl.textContent = Math.round(xphr)?.toLocaleString('en')
         currentXpEl.textContent = currentXp.toLocaleString('en')
 
-        const currentLevel = levels.sort((a, b) => b.level - a.level).find(a => a.totalXp < currentXp)
+        const nextLevel = levels.sort((a, b) => a.level - b.level).find(a => a.totalXp > currentXp)
 
-        nextLevelEl.textContent = currentLevel.level
-        const remainingXp = currentLevel.totalXp - currentXp
+        nextLevelEl.textContent = nextLevel.level
+        const remainingXp = nextLevel.totalXp - currentXp
         timeToNextEl.textContent = (remainingXp / xphr).toFixed(2)
 
-        const remainingXp100 = levels[levels.length - 1].totalXp - currentXp
+        const remainingXp100 = levels.sort((a, b) => a.level - b.level)[levels.length - 1].totalXp - currentXp
         timeToHundredEl.textContent = (remainingXp100 / xphr).toFixed(2)
       } catch (e) {
         console.error(e)
