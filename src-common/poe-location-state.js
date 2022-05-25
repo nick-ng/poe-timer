@@ -14,7 +14,10 @@ export default class PoeLocationState {
       town: Date.now(),
       map: Date.now(),
     };
-    this.eventLog = [];
+    this.eventLog = [{
+      type: 'reset',
+      timestamp: Date.now(),
+    }];
     this.onReset = () => {};
     this.onEnter = (area) => {};
     this.onDebug = () => {};
@@ -38,6 +41,10 @@ export default class PoeLocationState {
     this.msTotal = 0;
     this.lastEntered.map = Date.now();
     this.lastEntered.town = Date.now();
+    this.eventLog = [{
+      type: 'reset',
+      timestamp: Date.now(),
+    }];
     this.onReset();
   };
 
@@ -63,27 +70,34 @@ export default class PoeLocationState {
   addLine = (line) => {
     const a = this.parseLine(line);
 
-    if (a.type === "entered") {
-      this.onEnter(a.area);
-      // If you enter a town and were previously not in a town
-      if (isTown(a.area) && !this.inTown) {
-        // you are now in a town
-        this.inTown = true;
-        this.lastEntered.town = a.timestamp;
-
-        this.msInMaps += a.timestamp - this.lastEntered.map;
-      } else if (!isTown(a.area) && this.inTown) {
-        this.inTown = false;
-        this.lastEntered.map = a.timestamp;
-      }
+    if (!["entered"].includes(a.type)) {
+      return;
     }
 
-    if (a.type) {
-      if (this.lastEvent) {
-        this.msTotal += a.timestamp - this.lastEvent.timestamp;
-      }
-
-      this.eventLog.push(a);
+    // If you weren't in a town before
+    if (!this.inTown && this.lastEvent) {
+      // You were in a map so increase the time in maps
+      this.msInMaps += a.timestamp - this.lastEvent.timestamp;
     }
+
+    // If you enter a town and were previously not in a town
+    if (isTown(a.area) && !this.inTown) {
+      // you are now in a town
+      this.inTown = true;
+      this.lastEntered.town = a.timestamp;
+    } else if (!isTown(a.area) && this.inTown) {
+      this.inTown = false;
+      this.lastEntered.map = a.timestamp;
+    }
+
+    this.inTown = isTown(a.area);
+
+    if (this.lastEvent) {
+      this.msTotal += a.timestamp - ;
+    }
+
+    this.eventLog.push(a);
+
+    this.onEnter(a.area);
   };
 }

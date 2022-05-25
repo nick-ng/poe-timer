@@ -14,13 +14,18 @@ export default class PoeExperienceState {
     this.msTotal = 0;
     this.experienceLog = [];
     this.updateXp();
+    this.lastFetch = Date.now();
   }
 
   updateXp = async (delay = 0) => {
     if (delay > 0) {
       await sleep(delay);
-    } else {
-      await sleep(FETCH_COOLDOWN);
+    }
+
+    while (Date.now() - this.lastFetch < FETCH_COOLDOWN) {
+      const extraWait = FETCH_COOLDOWN - (Date.now() - this.lastFetch);
+      console.info(`Requesting too soon. Waiting ${extraWait} ms.`);
+      await sleep(extraWait);
     }
 
     const a = await fetchCharacters(settings);

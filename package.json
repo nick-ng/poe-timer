@@ -5,7 +5,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon --ignore static/ --ignore src-front/ --ignore data/ --delay 2 ./src-back/server.js",
+    "start": "nodemon --ignore static/ --ignore src-front/ --ignore data/ --ignore logs/ --delay 2 ./src-back/server.js",
     "serve": "node ./src-back/server.js"
   },
   "repository": {
