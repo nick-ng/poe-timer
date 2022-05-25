@@ -1,5 +1,8 @@
-import { parseLine } from "./log-parser.js";
+import { cleanLine } from "./log-parser.js";
 import { isTown } from "./poe-locations.js";
+
+const enteredRegex = /^: You have entered /;
+const characterSelectRegex = /^Connected to \S+\.pathofexile\.com in \d+ms\.$/;
 
 export default class PoeLocationState {
   constructor() {
@@ -30,8 +33,35 @@ export default class PoeLocationState {
     )}%`;
   }
 
+  reset = () => {
+    this.msInMaps = 0;
+    this.msTotal = 0;
+    this.lastEntered.map = Date.now();
+    this.lastEntered.town = Date.now();
+    this.onReset();
+  };
+
+  parseLine = (line) => {
+    const { timestamp, lineRest } = cleanLine(line);
+
+    const logEvent = {
+      timestamp,
+      type: null,
+    };
+
+    if (lineRest.match(enteredRegex)) {
+      logEvent.type = "entered";
+      logEvent.area = lineRest.replace(enteredRegex, "").replace(/\.$/, "");
+    } else if (lineRest.match(characterSelectRegex)) {
+      logEvent.type = "entered";
+      logEvent.area = "Character Select";
+    }
+
+    return logEvent;
+  };
+
   addLine = (line) => {
-    const a = parseLine(line);
+    const a = this.parseLine(line);
 
     if (a.type === "entered") {
       this.onEnter(a.area);
@@ -45,24 +75,6 @@ export default class PoeLocationState {
       } else if (!isTown(a.area) && this.inTown) {
         this.inTown = false;
         this.lastEntered.map = a.timestamp;
-      }
-    }
-
-    if (a.type === "command") {
-      console.log("a", a);
-      switch (a.command) {
-        case "reset":
-          this.msInMaps = 0;
-          this.msTotal = 0;
-          this.lastEntered.map = a.timestamp;
-          this.lastEntered.town = a.timestamp;
-          this.onReset();
-          break;
-        case "debug":
-          this.onDebug();
-          break;
-        default:
-        // nothing
       }
     }
 

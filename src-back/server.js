@@ -53,12 +53,6 @@ const updateXPhr = async () => {
 };
 
 const poeLocationState = new PoeLocationState();
-poeLocationState.onReset = () => {
-  console.log("experienceLog", experienceLog);
-  experienceLog = [];
-  console.log("reset", experienceLog);
-  updateXPhr();
-};
 poeLocationState.onEnter = async (area) => {
   if (isTown(area)) {
     await sleep(5000);
@@ -66,10 +60,6 @@ poeLocationState.onEnter = async (area) => {
 
     console.log(`${poeLocationState.inMapPercent}, XP/hr: ${xphr.toFixed(0)}`);
   }
-};
-poeLocationState.onDebug = () => {
-  console.log("poeLocationState.eventLog", poeLocationState.eventLog);
-  console.log("experienceLog", experienceLog);
 };
 
 const main = async () => {
@@ -93,11 +83,17 @@ app.get("/info", (_req, res, _next) => {
 });
 
 app.post("/reset", (_req, res, _next) => {
-  poeLocationState.onReset();
+  console.log("experienceLog", experienceLog);
+  experienceLog = [];
+  console.log("reset", experienceLog);
+  updateXPhr();
+  poeLocationState.reset();
   res.sendStatus(201);
 });
 
 app.get("/debug", (_req, res, _next) => {
+  console.log("poeLocationState.eventLog", poeLocationState.eventLog);
+  console.log("experienceLog", experienceLog);
   poeLocationState.onDebug();
   res.sendStatus(201);
 });
