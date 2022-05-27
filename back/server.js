@@ -5,9 +5,8 @@ import { resolve } from "path";
 
 import { readSettings } from "./settings.js";
 import { makeTail } from "./log-watch.js";
-import PoeLocationState from "../src-common/poe-location-state.js";
-import PoeCharacterState from "../src-common/poe-character-state.js";
-import { isTown } from "../src-common/poe-locations.js";
+import LocationState from "./state-trackers/location-state.js";
+import CharacterState from "./state-trackers/character-state.js";
 
 const PORT = 21842;
 const app = express();
@@ -24,13 +23,13 @@ const logger = (logLine) => {
   appendFile(logFilePath, `${logLine}\n`, {}, () => {});
 };
 
-const poeLocationState = new PoeLocationState({ logger });
-const poeCharacterState = new PoeCharacterState({
+const locationState = new LocationState({ logger });
+const characterState = new CharacterState({
   logger,
   settings,
 });
-poeLocationState.onEnter = async (area) => {
-  await poeCharacterState.updateXp(5000, true);
+locationState.onEnter = async (area) => {
+  await characterState.updateXp(5000, true);
 };
 
 const main = async () => {
@@ -42,33 +41,35 @@ const main = async () => {
   );
   const stopper1 = makeTail(settings.steamClientPath, async (line) => {
     // console.log(line);
-    poeLocationState.addLine(line);
+    locationState.addLine(line);
   });
   const stopper2 = makeTail(settings.gggClientPath, async (line) => {
     // console.log(line);
-    poeLocationState.addLine(line);
+    locationState.addLine(line);
   });
   const stopper3 = makeTail(settings.epicClientPath, async (line) => {
     // console.log(line);
-    poeLocationState.addLine(line);
+    locationState.addLine(line);
   });
+
+  characterState.startInterval();
 };
 
 app.get("/info", (_req, res, _next) => {
-  const fractionInMaps = poeLocationState.msInMaps / poeLocationState.msTotal;
+  const fractionInMaps = locationState.msInMaps / locationState.msTotal;
   const percentInMaps = fractionInMaps * 100;
   const percentInTown = (1 - fractionInMaps) * 100;
 
   res.json({
     percentInMaps,
     percentInTown,
-    xphr: poeCharacterState.getXpHr(Date.now() - 1000 * 60 * 30),
+    xphr: characterState.getXpHr(Date.now() - 1000 * 60 * 30),
   });
 });
 
 app.post("/reset", (_req, res, _next) => {
-  poeCharacterState.reset();
-  poeLocationState.reset();
+  characterState.reset();
+  locationState.reset();
   logger(
     JSON.stringify({
       type: "reset",
@@ -79,19 +80,16 @@ app.post("/reset", (_req, res, _next) => {
 });
 
 app.get("/debug", (_req, res, _next) => {
-  console.info("poeLocationState.eventLog", poeLocationState.eventLog);
-  console.info(
-    "poeCharacterState.characterXpLog",
-    poeCharacterState.characterXpLog
-  );
-  poeLocationState.onDebug();
+  console.info("locationState.eventLog", locationState.eventLog);
+  console.info("characterState.characterXpLog", characterState.characterXpLog);
+  locationState.onDebug();
   res.sendStatus(201);
 });
 
-app.use(express.static("static"));
+app.use(express.static("front"));
 
 server.listen(app.get("port"), () => {
-  console.info(`${new Date()} Website server listening on ${PORT}.`);
+  console.info(`${new Date()} http://localhost:${app.get("port")}`);
 });
 
 main();

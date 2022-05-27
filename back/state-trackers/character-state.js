@@ -1,4 +1,5 @@
-import { fetchCharacters } from "../src-back/ggg.js";
+import { fetchCharacters } from "../ggg.js";
+import { sleep } from "../utils.js";
 
 const FETCH_COOLDOWN = 10000;
 const INTERVAL_DELAY = 1000 * 60; // 1 minute
@@ -20,14 +21,7 @@ const levels = [
   { level: 100, totalXp: 4250334444 },
 ];
 
-export const sleep = (ms) =>
-  new Promise((resolve, _reject) => {
-    setTimeout(() => {
-      resolve();
-    }, ms);
-  });
-
-export default class PoeCharacterState {
+export default class CharacterState {
   constructor(options = {}) {
     const { settings, logger } = options;
 
@@ -43,18 +37,18 @@ export default class PoeCharacterState {
   }
 
   startInterval = () => {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-    }
-
-    setInterval(async () => {
-      if (this.alreadyFetched) {
-        this.alreadyFetched = false;
-        return;
-      }
-      await this.updateXp();
-      this.alreadyFetched = false;
-    }, INTERVAL_DELAY);
+    // character xp only gets updated when you change zones(?)
+    // if (this.intervalId) {
+    //   clearInterval(this.intervalId);
+    // }
+    // this.intervalId = setInterval(async () => {
+    //   if (this.alreadyFetched) {
+    //     this.alreadyFetched = false;
+    //     return;
+    //   }
+    //   await this.updateXp();
+    //   this.alreadyFetched = false;
+    // }, INTERVAL_DELAY);
   };
 
   reset = () => {

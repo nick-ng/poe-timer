@@ -1,10 +1,10 @@
-import { cleanLine } from "./log-parser.js";
-import { isTown } from "./poe-locations.js";
+import { cleanLine } from "../log-parser.js";
+import { isTown } from "./locations.js";
 
 const enteredRegex = /^: You have entered /;
 const characterSelectRegex = /^Connected to \S+\.pathofexile\.com in \d+ms\.$/;
 
-export default class PoeLocationState {
+export default class LocationState {
   constructor(options = {}) {
     const { logger } = options;
     this.logger = logger;

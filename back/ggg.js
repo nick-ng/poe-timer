@@ -1,11 +1,6 @@
 import fetch from "node-fetch";
 
-export const sleep = (ms) =>
-  new Promise((resolve, _reject) => {
-    setTimeout(() => {
-      resolve();
-    }, ms);
-  });
+import { sleep } from "./utils.js";
 
 export const fetchCharacters = async ({ accounts, userAgent }) => {
   const characters = [];
