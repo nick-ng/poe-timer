@@ -1,11 +1,12 @@
 import express, { json } from "express";
 import { createServer } from "http";
+import { appendFile } from "fs";
+import { resolve } from "path";
 
 import { readSettings } from "./settings.js";
-import { fetchCharacters } from "./ggg.js";
 import { makeTail } from "./log-watch.js";
 import PoeLocationState from "../src-common/poe-location-state.js";
-import { sleep } from "./utils.js";
+import PoeCharacterState from "../src-common/poe-character-state.js";
 import { isTown } from "../src-common/poe-locations.js";
 
 const PORT = 21842;
@@ -16,56 +17,42 @@ app.set("port", PORT);
 app.use(json());
 
 const settings = readSettings();
-let lastFetch = 0;
-const fetchCooldown = 5000;
-let experienceLog = [];
-let xphr = 0;
 
-const updateXPhr = async () => {
-  const sinceLastFetch = Date.now() - lastFetch;
-  if (sinceLastFetch < fetchCooldown) {
-    return;
-  }
-  lastFetch = Date.now();
-  const a = await fetchCharacters(settings);
-  const b = a.filter((character) => character.lastActive);
+const logFilePath = resolve(process.cwd(), "logs", "main.log");
 
-  if (b.length === 0) {
-    return xphr;
-  }
-
-  const character = b[0];
-
-  const newestLog = {
-    timestamp: Date.now(),
-    experience: character.experience,
-  };
-
-  experienceLog.push(newestLog);
-
-  const start = experienceLog[0];
-
-  const xpChange = newestLog.experience - start.experience;
-  const hourChange = (newestLog.timestamp - start.timestamp) / 3600000;
-
-  xphr = xpChange / hourChange;
-  return xphr;
+const logger = (logLine) => {
+  appendFile(logFilePath, `${logLine}\n`, {}, () => {});
 };
 
-const poeLocationState = new PoeLocationState();
+const poeLocationState = new PoeLocationState({ logger });
+const poeCharacterState = new PoeCharacterState({
+  logger,
+  settings,
+});
 poeLocationState.onEnter = async (area) => {
   if (isTown(area)) {
-    await sleep(5000);
-    await updateXPhr();
+    await poeCharacterState.updateXp();
 
-    console.log(`${poeLocationState.inMapPercent}, XP/hr: ${xphr.toFixed(0)}`);
+    console.log(poeCharacterState.getXpHr());
   }
 };
 
 const main = async () => {
-  updateXPhr();
-
-  const stopper = makeTail(settings.steamClientPath, async (line) => {
+  logger(
+    JSON.stringify({
+      type: "startup",
+      timestamp: Date.now(),
+    })
+  );
+  const stopper1 = makeTail(settings.steamClientPath, async (line) => {
+    // console.log(line);
+    poeLocationState.addLine(line);
+  });
+  const stopper2 = makeTail(settings.gggClientPath, async (line) => {
+    // console.log(line);
+    poeLocationState.addLine(line);
+  });
+  const stopper3 = makeTail(settings.epicClientPath, async (line) => {
     // console.log(line);
     poeLocationState.addLine(line);
   });
@@ -75,25 +62,28 @@ app.get("/info", (_req, res, _next) => {
   const fractionInMaps = poeLocationState.msInMaps / poeLocationState.msTotal;
   const percentInMaps = fractionInMaps * 100;
   const percentInTown = (1 - fractionInMaps) * 100;
-  const currentXp =
-    experienceLog.length > 0
-      ? experienceLog[experienceLog.length - 1].experience
-      : 0;
-  res.json({ percentInMaps, percentInTown, xphr, currentXp });
+
+  res.json({ percentInMaps, percentInTown, xphr: poeCharacterState.getXpHr() });
 });
 
 app.post("/reset", (_req, res, _next) => {
-  console.log("experienceLog", experienceLog);
-  experienceLog = [];
-  console.log("reset", experienceLog);
-  updateXPhr();
+  poeCharacterState.reset();
   poeLocationState.reset();
+  logger(
+    JSON.stringify({
+      type: "reset",
+      timestamp: Date.now(),
+    })
+  );
   res.sendStatus(201);
 });
 
 app.get("/debug", (_req, res, _next) => {
-  console.log("poeLocationState.eventLog", poeLocationState.eventLog);
-  console.log("experienceLog", experienceLog);
+  console.info("poeLocationState.eventLog", poeLocationState.eventLog);
+  console.info(
+    "poeCharacterState.characterXpLog",
+    poeCharacterState.characterXpLog
+  );
   poeLocationState.onDebug();
   res.sendStatus(201);
 });

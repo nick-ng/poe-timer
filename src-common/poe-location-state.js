@@ -5,7 +5,9 @@ const enteredRegex = /^: You have entered /;
 const characterSelectRegex = /^Connected to \S+\.pathofexile\.com in \d+ms\.$/;
 
 export default class PoeLocationState {
-  constructor() {
+  constructor(options = {}) {
+    const { logger } = options;
+    this.logger = logger;
     this.msInMaps = 0;
     this.msTotal = 0;
     this.currentLocation = "";
@@ -14,10 +16,12 @@ export default class PoeLocationState {
       town: Date.now(),
       map: Date.now(),
     };
-    this.eventLog = [{
-      type: 'reset',
-      timestamp: Date.now(),
-    }];
+    this.eventLog = [
+      {
+        type: "reset",
+        timestamp: Date.now(),
+      },
+    ];
     this.onReset = () => {};
     this.onEnter = (area) => {};
     this.onDebug = () => {};
@@ -41,10 +45,12 @@ export default class PoeLocationState {
     this.msTotal = 0;
     this.lastEntered.map = Date.now();
     this.lastEntered.town = Date.now();
-    this.eventLog = [{
-      type: 'reset',
-      timestamp: Date.now(),
-    }];
+    this.eventLog = [
+      {
+        type: "reset",
+        timestamp: Date.now(),
+      },
+    ];
     this.onReset();
   };
 
@@ -93,10 +99,11 @@ export default class PoeLocationState {
     this.inTown = isTown(a.area);
 
     if (this.lastEvent) {
-      this.msTotal += a.timestamp - ;
+      this.msTotal += a.timestamp - this.lastEvent.timestamp;
     }
 
     this.eventLog.push(a);
+    this.logger(JSON.stringify(a));
 
     this.onEnter(a.area);
   };

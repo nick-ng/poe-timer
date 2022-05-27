@@ -3,9 +3,10 @@ import { resolve } from "path";
 import YAML from "yaml";
 
 const settingsFile = resolve(process.cwd(), "settings.yml");
+const defaultSettingsFile = resolve(process.cwd(), "settings-default.yml");
 
 const defaultSettings = {
-  account: "example account",
+  accounts: ["example account"],
   userAgent: "-",
   gggClientPath:
     "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\logs\\Client.txt",
@@ -16,6 +17,7 @@ const defaultSettings = {
 };
 
 export const readSettings = () => {
+  writeFileSync(defaultSettingsFile, YAML.stringify(defaultSettings));
   try {
     return YAML.parse(readFileSync(settingsFile).toString());
   } catch (e) {
