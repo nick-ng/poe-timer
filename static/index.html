@@ -34,8 +34,12 @@
       padding: 5px;
     }
 
-    .text {
+    .left {
       text-align: left;
+    }
+
+    .center {
+      text-align: center;
     }
 
     #in-maps,
@@ -44,7 +48,7 @@
     #time-to-next,
     #time-to-hundred,
     #current-xp,
-    .number {
+    .right {
       text-align: right;
     }
 
@@ -78,22 +82,23 @@
     <table class="second-display">
       <thead>
         <tr>
-          <th class="text">
+          <th class="left">
             Character
           </th>
-          <th class="number">XP/Hr</th>
-          <th class="number">Next</th>
-          <th class="number">Time to (Hr)</th>
+          <th class="right">XP/Hr</th>
+          <th class="right">Next</th>
+          <th class="right">Time to (Hr)</th>
           <th>Copy XP</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="c in charactersXp">
           <td>{{ c.name }}</td>
-          <td class="number">{{ c.xpHr }}</td>
-          <td class="number">{{ c.nextLevel }}</td>
-          <td class="number">{{ c.timeToLevel }}</td>
-          <td><button @click="copyToClipboard(c.currentXp)">{{ c.currentXp }}</button></td>
+          <td class="right">{{ c.xpHr }}</td>
+          <td class="right">{{ c.nextLevel }}</td>
+          <td class="right">{{ c.timeToLevel }}</td>
+          <td class="center"><button @click="copyToClipboard(c.currentXp)">{{ c.currentXp.toLocaleString('en')
+              }}</button></td>
         </tr>
       </tbody>
     </table>
@@ -139,15 +144,16 @@
             this.percentInMaps = `${percentInMaps.toFixed(1)}%`;
             this.percentInTown = `${percentInTown.toFixed(1)}%`;
 
-            this.charactersXp = xphr.map(a => {
+            this.charactersXp = xphr.sort((a, b) => b.xpHr - a.xpHr).map(a => {
               return {
                 name: a.name,
-                xpHr: Math.round(a.xpHr),
+                xpHrRaw: a.xpHr,
+                xpHr: a.xpHr.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }),
                 nextLevel: a.nextLevel,
-                timeToLevel: ((a.nextLevelXp - a.currentXp) / a.xpHr).toFixed(1),
+                timeToLevel: ((a.nextLevelXp - a.currentXp) / a.xpHr).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
                 currentXp: a.currentXp,
               }
-            }).sort((a, b) => a.xpHr - b.xpHr);
+            });
           } catch (e) {
             console.error(e)
           }

@@ -1,6 +1,7 @@
 import { fetchCharacters } from "../src-back/ggg.js";
 
 const FETCH_COOLDOWN = 10000;
+const INTERVAL_DELAY = 1000 * 60; // 1 minute
 
 const level80Xp = 855129128;
 const level90Xp = 1934009687;
@@ -37,19 +38,40 @@ export default class PoeCharacterState {
     this.lastFetch = Date.now();
     this.onReset = () => {};
     this.prevXp = 0;
+    this.intervalId = null;
+    this.alreadyFetched = false;
   }
+
+  startInterval = () => {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+
+    setInterval(async () => {
+      if (this.alreadyFetched) {
+        this.alreadyFetched = false;
+        return;
+      }
+      await this.updateXp();
+      this.alreadyFetched = false;
+    }, INTERVAL_DELAY);
+  };
 
   reset = () => {
     this.characterXpLog = {};
     this.updateXp();
   };
 
-  updateXp = async (delay = 0) => {
+  updateXp = async (delay = 0, giveUp = false) => {
+    this.alreadyFetched = true;
     if (delay > 0) {
       await sleep(delay);
     }
 
     while (Date.now() - this.lastFetch < FETCH_COOLDOWN) {
+      if (giveUp) {
+        return;
+      }
       const extraWait = FETCH_COOLDOWN - (Date.now() - this.lastFetch);
       console.info(`Requesting too soon. Waiting ${extraWait} ms.`);
       await sleep(extraWait);

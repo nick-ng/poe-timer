@@ -30,11 +30,7 @@ const poeCharacterState = new PoeCharacterState({
   settings,
 });
 poeLocationState.onEnter = async (area) => {
-  if (isTown(area)) {
-    await poeCharacterState.updateXp();
-
-    console.log(poeCharacterState.getXpHr());
-  }
+  await poeCharacterState.updateXp(5000, true);
 };
 
 const main = async () => {
@@ -63,7 +59,11 @@ app.get("/info", (_req, res, _next) => {
   const percentInMaps = fractionInMaps * 100;
   const percentInTown = (1 - fractionInMaps) * 100;
 
-  res.json({ percentInMaps, percentInTown, xphr: poeCharacterState.getXpHr() });
+  res.json({
+    percentInMaps,
+    percentInTown,
+    xphr: poeCharacterState.getXpHr(Date.now() - 1000 * 60 * 30),
+  });
 });
 
 app.post("/reset", (_req, res, _next) => {
